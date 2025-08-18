@@ -12,14 +12,24 @@ A persuasive chatbot that debates and stands its ground on controversial topics.
 
 2. Add your OpenAI API key to `.env`
 
-3. Install dependencies:
+3. Set up virtual environment and install dependencies:
 
    ```bash
-   pip install -r requirements.txt
+   # Using Docker (recommended)
+   make install
+   make run
+
+   # Or for local development
+   make dev-install
+   source ~/venvs/stubborn-chatbot/bin/activate
    ```
 
 4. Run the application:
    ```bash
+   # Using Docker
+   make run
+
+   # Or locally (with virtual environment activated)
    python main.py
    ```
 
