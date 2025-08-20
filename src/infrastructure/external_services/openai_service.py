@@ -34,7 +34,7 @@ class OpenAIService(LLMServiceInterface):
             api_key: OpenAI API key
             model: OpenAI model to use (default: gpt-3.5-turbo)
         """
-        self._client = openai.OpenAI(api_key=api_key)
+        self._client = openai.AsyncOpenAI(api_key=api_key)
         self._model = model
         
         # System prompt for generating controversial stances
