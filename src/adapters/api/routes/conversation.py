@@ -31,23 +31,23 @@ async def handle_conversation(
     try:
         if request.conversation_id is None:
             # Start new conversation
-            conversation = start_use_case.execute(request.message)
+            conversation = await start_use_case.execute(request.message)
         else:
             # Continue existing conversation
-            conversation = continue_use_case.execute(request.conversation_id, request.message)
+            conversation = await continue_use_case.execute(request.conversation_id, request.message)
         
         # Convert to response format (last 5 messages, most recent last)
         recent_messages = conversation.get_recent_messages(limit=5)
         message_responses = [
             MessageResponse(
-                role="user" if msg.is_from_user else "bot",
+                role=msg.role,
                 message=msg.content
             )
             for msg in recent_messages
         ]
         
         return ConversationResponse(
-            conversation_id=conversation.id,
+            conversation_id=str(conversation.conversation_id),
             messages=message_responses
         )
         

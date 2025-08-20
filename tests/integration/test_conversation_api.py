@@ -3,7 +3,8 @@
 import pytest
 from src.core.use_cases.start_conversation import StartConversationUseCase
 from src.core.use_cases.continue_conversation import ContinueConversationUseCase
-from src.infrastructure.repositories.conversation_memory import InMemoryConversationRepository
+from src.infrastructure.repositories.conversation_memory import ConversationMemoryRepository
+from src.core.domain_services.topic_service import TopicService
 
 
 class TestConversationFlow:
@@ -11,67 +12,78 @@ class TestConversationFlow:
 
     def setup_method(self):
         """Set up test dependencies."""
-        self.repository = InMemoryConversationRepository()
-        self.start_use_case = StartConversationUseCase(self.repository)
+        self.repository = ConversationMemoryRepository()
+        self.topic_service = TopicService(llm_service=None)  # Use fallback topics
+        self.start_use_case = StartConversationUseCase(self.repository, self.topic_service)
         self.continue_use_case = ContinueConversationUseCase(self.repository)
 
-    def test_start_conversation_success(self):
+    @pytest.mark.asyncio
+    async def test_start_conversation_success(self):
         """Test starting a new conversation."""
         # Act
-        conversation = self.start_use_case.execute("Hello, I think the earth is round")
+        conversation = await self.start_use_case.execute("Hello, I think the earth is round")
         
         # Assert
-        assert conversation.id is not None
-        assert len(conversation.messages) == 2  # User message + bot response
-        assert conversation.messages[0].content == "Hello, I think the earth is round"
-        assert conversation.messages[0].is_from_user is True
-        assert conversation.messages[1].is_from_user is False
+        assert conversation.conversation_id is not None
+        assert len(conversation.get_messages()) == 2  # User message + bot response
+        assert conversation.get_messages()[0].content == "Hello, I think the earth is round"
+        assert conversation.get_messages()[0].role == "user"
+        assert conversation.get_messages()[1].role == "bot"
+        assert conversation.has_topic()  # Should have a debate topic assigned
+        assert conversation.topic is not None
 
-    def test_start_conversation_empty_message(self):
+    @pytest.mark.asyncio
+    async def test_start_conversation_empty_message(self):
         """Test starting conversation with empty message fails."""
         with pytest.raises(ValueError, match="Initial message cannot be empty"):
-            self.start_use_case.execute("")
+            await self.start_use_case.execute("")
 
-    def test_continue_conversation_success(self):
+    @pytest.mark.asyncio
+    async def test_continue_conversation_success(self):
         """Test continuing an existing conversation."""
         # Arrange
-        conversation = self.start_use_case.execute("Initial message")
-        initial_message_count = len(conversation.messages)
+        conversation = await self.start_use_case.execute("Initial message")
+        initial_message_count = len(conversation.get_messages())
         
         # Act
-        updated_conversation = self.continue_use_case.execute(
-            conversation.id, 
+        updated_conversation = await self.continue_use_case.execute(
+            str(conversation.conversation_id), 
             "Follow-up message"
         )
         
         # Assert
-        assert updated_conversation.id == conversation.id
-        assert len(updated_conversation.messages) == initial_message_count + 2
-        assert updated_conversation.messages[-2].content == "Follow-up message"
-        assert updated_conversation.messages[-2].is_from_user is True
-        assert updated_conversation.messages[-1].is_from_user is False
+        assert updated_conversation.conversation_id == conversation.conversation_id
+        assert len(updated_conversation.get_messages()) == initial_message_count + 2
+        assert updated_conversation.get_messages()[-2].content == "Follow-up message"
+        assert updated_conversation.get_messages()[-2].role == "user"
+        assert updated_conversation.get_messages()[-1].role == "bot"
 
-    def test_continue_conversation_not_found(self):
+    @pytest.mark.asyncio
+    async def test_continue_conversation_not_found(self):
         """Test continuing non-existent conversation fails."""
+        # Use a valid UUID format that doesn't exist
+        fake_uuid = "12345678-1234-5678-1234-567812345678"
         with pytest.raises(ValueError, match="Conversation with ID .* not found"):
-            self.continue_use_case.execute("non-existent-id", "message")
+            await self.continue_use_case.execute(fake_uuid, "message")
 
-    def test_continue_conversation_empty_message(self):
+    @pytest.mark.asyncio
+    async def test_continue_conversation_empty_message(self):
         """Test continuing conversation with empty message fails."""
-        conversation = self.start_use_case.execute("Initial message")
+        conversation = await self.start_use_case.execute("Initial message")
         
         with pytest.raises(ValueError, match="User message cannot be empty"):
-            self.continue_use_case.execute(conversation.id, "")
+            await self.continue_use_case.execute(str(conversation.conversation_id), "")
 
-    def test_conversation_persistence(self):
+    @pytest.mark.asyncio
+    async def test_conversation_persistence(self):
         """Test that conversations are properly persisted."""
         # Start conversation
-        conversation = self.start_use_case.execute("Test message")
+        conversation = await self.start_use_case.execute("Test message")
         
         # Retrieve from repository directly
-        retrieved = self.repository.get_by_id(conversation.id)
+        retrieved = await self.repository.get_by_id(conversation.conversation_id)
         
         # Assert
         assert retrieved is not None
-        assert retrieved.id == conversation.id
-        assert len(retrieved.messages) == len(conversation.messages)
+        assert retrieved.conversation_id == conversation.conversation_id
+        assert len(retrieved.get_messages()) == len(conversation.get_messages())

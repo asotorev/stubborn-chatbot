@@ -1,5 +1,6 @@
 """Continue conversation use case."""
 
+from uuid import UUID
 from src.core.entities.conversation import Conversation
 from src.core.entities.message import Message
 from src.core.interfaces.conversation_repository import ConversationRepositoryInterface
@@ -11,7 +12,7 @@ class ContinueConversationUseCase:
     def __init__(self, conversation_repository: ConversationRepositoryInterface):
         self._conversation_repository = conversation_repository
 
-    def execute(self, conversation_id: str, user_message: str) -> Conversation:
+    async def execute(self, conversation_id: str, user_message: str) -> Conversation:
         """
         Continue an existing conversation with a new user message.
         
@@ -29,26 +30,47 @@ class ContinueConversationUseCase:
             raise ValueError("User message cannot be empty")
 
         # Retrieve existing conversation
-        conversation = self._conversation_repository.get_by_id(conversation_id)
+        try:
+            conversation_uuid = UUID(conversation_id)
+        except ValueError:
+            raise ValueError(f"Invalid conversation ID format: {conversation_id}")
+            
+        conversation = await self._conversation_repository.get_by_id(conversation_uuid)
         if conversation is None:
             raise ValueError(f"Conversation with ID {conversation_id} not found")
 
         # Add the user's new message
         new_user_message = Message.create(
             content=user_message.strip(),
-            is_from_user=True
+            role="user"
         )
         conversation.add_message(new_user_message)
         
-        # For now, add a simple bot response
-        # TODO: This will be replaced with AI-generated responses in later commits
+        # Generate bot response based on debate topic
+        if conversation.has_topic():
+            # Use debate topic to create contextual response
+            topic = conversation.topic
+            import random
+            
+            # Select a random key argument to use
+            argument = random.choice(topic.key_arguments)
+            
+            bot_response_content = (
+                f"Interesting point! But I still maintain that {topic.title.lower()}. "
+                f"Consider this: {argument}. "
+                f"How do you respond to that evidence?"
+            )
+        else:
+            # Fallback for conversations without topics
+            bot_response_content = "Interesting point! Let me counter with this perspective..."
+        
         bot_response = Message.create(
-            content="Interesting point! Let me counter with this perspective...",
-            is_from_user=False
+            content=bot_response_content,
+            role="bot"
         )
         conversation.add_message(bot_response)
         
         # Save updated conversation
-        self._conversation_repository.save(conversation)
+        await self._conversation_repository.save(conversation)
         
         return conversation

@@ -20,7 +20,7 @@ class Conversation:
     
     def __init__(
         self,
-        topic: DebateTopic,
+        topic: Optional[DebateTopic] = None,
         conversation_id: UUID | None = None,
         created_at: datetime | None = None,
         messages: List[Message] | None = None
@@ -29,26 +29,23 @@ class Conversation:
         Initialize a new conversation.
         
         Args:
-            topic: The debate topic for this conversation
+            topic: The debate topic for this conversation (can be set later)
             conversation_id: Unique identifier (auto-generated if None)
             created_at: When the conversation started (auto-generated if None)
             messages: Initial messages (empty list if None)
         """
-        if not isinstance(topic, DebateTopic):
-            raise ValueError("Topic must be a DebateTopic instance")
-            
         self.conversation_id = conversation_id or uuid4()
         self.topic = topic
         self.created_at = created_at or datetime.now(timezone.utc)
         self._messages: List[Message] = messages or []
     
     @classmethod
-    def create(cls, topic: DebateTopic) -> "Conversation":
+    def create(cls, topic: Optional[DebateTopic] = None) -> "Conversation":
         """
         Convenience method to create a new conversation.
         
         Args:
-            topic: The debate topic for this conversation
+            topic: The debate topic for this conversation (optional)
             
         Returns:
             New Conversation instance
@@ -118,6 +115,24 @@ class Conversation:
         """Check if the conversation has no messages."""
         return len(self._messages) == 0
     
+    def set_debate_topic(self, topic: DebateTopic) -> None:
+        """
+        Set or update the debate topic for this conversation.
+        
+        Args:
+            topic: The debate topic to assign
+            
+        Raises:
+            ValueError: If topic is invalid
+        """
+        if not isinstance(topic, DebateTopic):
+            raise ValueError("Topic must be a DebateTopic instance")
+        self.topic = topic
+    
+    def has_topic(self) -> bool:
+        """Check if the conversation has a debate topic assigned."""
+        return self.topic is not None
+    
     def get_conversation_summary(self) -> str:
         """
         Get a summary of the conversation state.
@@ -126,16 +141,20 @@ class Conversation:
             String describing the conversation
         """
         message_count = len(self._messages)
-        return (
-            f"Conversation about '{self.topic.title}' "
-            f"({self.topic.bot_stance.value}) "
-            f"with {message_count} messages"
-        )
+        if self.topic:
+            return (
+                f"Conversation about '{self.topic.title}' "
+                f"({self.topic.bot_stance.value}) "
+                f"with {message_count} messages"
+            )
+        else:
+            return f"Conversation with {message_count} messages (no topic assigned)"
     
     def __repr__(self) -> str:
+        topic_title = self.topic.title if self.topic else "No topic"
         return (
             f"Conversation(id={self.conversation_id}, "
-            f"topic='{self.topic.title}', "
+            f"topic='{topic_title}', "
             f"messages={len(self._messages)})"
         )
     

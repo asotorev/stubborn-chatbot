@@ -96,7 +96,7 @@ class TestConversationAPI:
             }
         )
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         data = response.json()
         assert "detail" in data
 
@@ -112,7 +112,7 @@ class TestConversationAPI:
         
         assert response.status_code == 400
         data = response.json()
-        assert "not found" in data["detail"].lower()
+        assert "invalid conversation id format" in data["detail"].lower()
 
     def test_invalid_request_format(self):
         """Test invalid request format returns 422."""
