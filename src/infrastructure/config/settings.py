@@ -17,6 +17,16 @@ class Settings:
         self.openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
         self.openai_model: str = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
         
+        # Redis Configuration
+        self.redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379")
+        self.redis_password: Optional[str] = os.getenv("REDIS_PASSWORD")
+        self.redis_db: int = int(os.getenv("REDIS_DB", "0"))
+        self.redis_max_connections: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "10"))
+        self.redis_retry_on_timeout: bool = os.getenv("REDIS_RETRY_ON_TIMEOUT", "true").lower() == "true"
+        
+        # Storage Configuration
+        self.storage_type: str = os.getenv("STORAGE_TYPE", "memory")  # "memory" or "redis"
+        
         # Application Configuration
         self.port: int = int(os.getenv("PORT", "8000"))
         

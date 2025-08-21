@@ -81,6 +81,32 @@ class ConversationRepositoryInterface(ABC):
             RepositoryError: If the check operation fails
         """
         pass
+    
+    @abstractmethod
+    async def get_conversation_count(self) -> int:
+        """
+        Get the total number of conversations in storage.
+        
+        Returns:
+            Number of stored conversations
+            
+        Raises:
+            RepositoryError: If the count operation fails
+        """
+        pass
+    
+    @abstractmethod
+    async def clear_all(self) -> None:
+        """
+        Clear all conversations from storage.
+        
+        Warning: This will delete all conversation data permanently.
+        Use with caution, especially in production environments.
+        
+        Raises:
+            RepositoryError: If the clear operation fails
+        """
+        pass
 
 
 class RepositoryError(Exception):
