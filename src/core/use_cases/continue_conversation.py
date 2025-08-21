@@ -5,6 +5,7 @@ from src.core.entities.conversation import Conversation
 from src.core.entities.message import Message
 from src.core.interfaces.conversation_repository import ConversationRepositoryInterface
 from src.core.interfaces.llm_service import LLMServiceInterface, LLMServiceError
+from src.core.domain_services.topic_service import TopicService
 
 
 class ContinueConversationUseCase:
@@ -13,10 +14,12 @@ class ContinueConversationUseCase:
     def __init__(
         self, 
         conversation_repository: ConversationRepositoryInterface,
-        llm_service: LLMServiceInterface | None = None
+        llm_service: LLMServiceInterface | None = None,
+        topic_service: TopicService | None = None
     ):
         self._conversation_repository = conversation_repository
         self._llm_service = llm_service
+        self._topic_service = topic_service
 
     async def execute(self, conversation_id: str, user_message: str) -> Conversation:
         """
@@ -78,6 +81,20 @@ class ContinueConversationUseCase:
             Generated bot response content
         """
         if not conversation.has_topic():
+            # Try to generate a topic from this user message
+            if self._topic_service:
+                topic = await self._topic_service.generate_topic_for_message(user_message)
+                if topic is not None:
+                    # Set the topic and generate a proper debate response
+                    conversation.set_debate_topic(topic)
+                    stance_word = "support" if topic.bot_stance.value == "for" else "oppose"
+                    return (
+                        f"I actually {stance_word} the idea that {topic.title.lower()}. "
+                        f"Here's why I believe this: {topic.key_arguments[0]}. "
+                        f"What do you think about that?"
+                    )
+            
+            # Still no topic - ask again but more specifically
             return "I hear what you're saying, but I was really looking forward to a good debate with you. What's a topic you have strong opinions about?"
         
         topic = conversation.topic

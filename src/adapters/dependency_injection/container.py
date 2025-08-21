@@ -51,5 +51,6 @@ def get_continue_conversation_use_case() -> ContinueConversationUseCase:
     """Get continue conversation use case dependency."""
     return ContinueConversationUseCase(
         conversation_repository=get_conversation_repository(),
-        llm_service=get_llm_service()
+        llm_service=get_llm_service(),
+        topic_service=get_topic_service()
     )

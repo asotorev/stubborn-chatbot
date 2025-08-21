@@ -11,7 +11,12 @@ help:
 	@echo "  make logs       - View service logs"
 	@echo "  make down       - Teardown of all running services"
 	@echo "  make clean      - Teardown and removal of all containers"
+	@echo "  make chat       - Start interactive chat CLI in Docker"
 	@echo "  make help       - Show this help message"
+	@echo ""
+	@echo "Advanced/Development Commands:"
+	@echo "  make dev-install - Set up local Python environment for development"
+	@echo "  make dev-run     - Run API server locally (without Docker)"
 	@echo ""
 
 # Install dependencies
@@ -75,6 +80,24 @@ dev-install:
 dev-run:
 	@echo "Starting development server..."
 	@$(PYTHON) main.py
+
+# Interactive chat CLI
+chat:
+	@echo "Starting interactive chat CLI in Docker..."
+	@echo "Note: Make sure your .env file contains OPENAI_API_KEY for full functionality"
+	@docker-compose --profile chat run --rm chat || { \
+		echo ""; \
+		echo "Docker not available. Trying local Python fallback..."; \
+		echo "Note: This requires Python dependencies to be installed locally."; \
+		$(PYTHON) chat.py 2>/dev/null || { \
+			echo ""; \
+			echo "Local Python fallback failed."; \
+			echo "Either:"; \
+			echo "  1. Start Docker and try again, OR"; \
+			echo "  2. Run 'make dev-install' first for local Python setup"; \
+			exit 1; \
+		}; \
+	}
 
 # Auto-detect Python command
 PYTHON := $(shell command -v python3 2>/dev/null || command -v python 2>/dev/null || echo "python-not-found")
