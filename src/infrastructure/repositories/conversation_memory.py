@@ -104,19 +104,31 @@ class ConversationMemoryRepository(ConversationRepositoryInterface):
         except Exception as e:
             raise RepositoryError(f"Failed to check conversation existence: {str(e)}", cause=e)
     
-    def get_conversation_count(self) -> int:
+    async def get_conversation_count(self) -> int:
         """
         Get the total number of conversations in memory.
         
         Returns:
             Number of stored conversations
+            
+        Raises:
+            RepositoryError: If the count operation fails
         """
-        return len(self._conversations)
+        try:
+            return len(self._conversations)
+        except Exception as e:
+            raise RepositoryError(f"Failed to count conversations: {str(e)}", cause=e)
     
-    def clear_all(self) -> None:
+    async def clear_all(self) -> None:
         """
         Clear all conversations from memory.
         
-        Useful for testing and cleanup operations.
+        Warning: This will delete all conversation data permanently.
+        
+        Raises:
+            RepositoryError: If the clear operation fails
         """
-        self._conversations.clear()
+        try:
+            self._conversations.clear()
+        except Exception as e:
+            raise RepositoryError(f"Failed to clear conversations: {str(e)}", cause=e)

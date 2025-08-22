@@ -5,9 +5,11 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
+      - REDIS_URL=redis://redis:6379
     volumes:
       - ./.env:/app/.env:ro
     depends_on:
+      - redis
       - healthcheck
     restart: unless-stopped
     healthcheck:
@@ -17,14 +19,32 @@ services:
       retries: 3
       start_period: 40s
 
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
   # Interactive chat CLI service
   chat:
     build: .
     command: python chat.py
     stdin_open: true
     tty: true
+    environment:
+      - REDIS_URL=redis://redis:6379
     volumes:
       - ./.env:/app/.env:ro
+    depends_on:
+      - redis
     profiles:
       - chat
 
@@ -33,6 +53,9 @@ services:
     image: busybox:latest
     command: ["sh", "-c", "echo 'Health check service ready'"]
     restart: "no"
+
+volumes:
+  redis_data:
 
 networks:
   default:
