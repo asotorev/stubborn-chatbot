@@ -233,7 +233,7 @@ class RedisConversationRepository(ConversationRepositoryInterface):
         Should be called when the repository is no longer needed.
         """
         try:
-            await self._redis.close()
+            await self._redis.aclose()
             logger.debug("Closed Redis connection")
         except Exception as e:
             logger.warning(f"Error closing Redis connection: {str(e)}")

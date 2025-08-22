@@ -72,7 +72,7 @@ class TestRealOpenAIIntegration:
         """Test complete conversation flow with real AI maintaining context."""
         # Start conversation about a specific topic
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I believe electric cars are environmentally friendly"
@@ -89,7 +89,7 @@ class TestRealOpenAIIntegration:
         
         # Continue conversation with specific counter-argument
         continue_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": conversation_id,
                 "message": "But electric cars produce zero direct emissions"
@@ -114,7 +114,7 @@ class TestRealOpenAIIntegration:
         """Test that real AI responses meet quality standards."""
         # Test with a challenging topic that requires nuanced response
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "Universal basic income would solve poverty"
@@ -199,7 +199,7 @@ class TestRealOpenAIPerformance:
         
         start_time = time.time()
         response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I think remote work is better than office work"
@@ -220,7 +220,7 @@ class TestRealOpenAIPerformance:
         
         start_time = time.time()
         continue_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": conversation_id,
                 "message": "Remote work increases productivity"

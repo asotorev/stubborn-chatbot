@@ -6,6 +6,7 @@ services:
     environment:
       - PORT=8000
       - REDIS_URL=redis://redis:6379
+      - STORAGE_TYPE=redis
     volumes:
       - ./.env:/app/.env:ro
     depends_on:
@@ -41,6 +42,7 @@ services:
     tty: true
     environment:
       - REDIS_URL=redis://redis:6379
+      - STORAGE_TYPE=redis
     volumes:
       - ./.env:/app/.env:ro
     depends_on:

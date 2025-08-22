@@ -21,7 +21,7 @@ class TestDebateFlow:
         """Test a complete debate flow in a single conversation."""
         # Start conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I think renewable energy is the future"
@@ -55,7 +55,7 @@ class TestDebateFlow:
         
         for i, user_message in enumerate(follow_up_messages):
             continue_response = self.client.post(
-                "/api/v1/conversation",
+                "/conversation",
                 json={
                     "conversation_id": conversation_id,
                     "message": user_message
@@ -85,7 +85,7 @@ class TestDebateFlow:
         """Test that multiple conversations are independent."""
         # Start two different conversations
         conv1_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I love pineapple on pizza"
@@ -93,7 +93,7 @@ class TestDebateFlow:
         )
         
         conv2_response = self.client.post(
-            "/api/v1/conversation", 
+            "/conversation", 
             json={
                 "conversation_id": None,
                 "message": "Dogs are better than cats"
@@ -111,7 +111,7 @@ class TestDebateFlow:
         
         # Continue both conversations independently
         conv1_continue = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": conv1_data["conversation_id"],
                 "message": "It adds a nice sweet and savory balance"
@@ -119,7 +119,7 @@ class TestDebateFlow:
         )
         
         conv2_continue = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": conv2_data["conversation_id"],
                 "message": "Dogs are loyal and protective"
@@ -139,7 +139,7 @@ class TestDebateFlow:
         """Test that conversation properly limits to 5 most recent messages."""
         # Start conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "Initial message"
@@ -159,7 +159,7 @@ class TestDebateFlow:
         
         for message in messages:
             continue_response = self.client.post(
-                "/api/v1/conversation",
+                "/conversation",
                 json={
                     "conversation_id": conversation_id,
                     "message": message
@@ -180,7 +180,7 @@ class TestDebateFlow:
         """Test that bot responses show variety and context awareness."""
         # Start conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I think vaccines are safe"
@@ -200,7 +200,7 @@ class TestDebateFlow:
         
         for message in test_messages:
             continue_response = self.client.post(
-                "/api/v1/conversation",
+                "/conversation",
                 json={
                     "conversation_id": conversation_id,
                     "message": message
@@ -224,7 +224,7 @@ class TestDebateFlow:
         """Test that conversation state persists across multiple requests."""
         # Start conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I believe in traditional medicine"
@@ -235,7 +235,7 @@ class TestDebateFlow:
         
         # Continue conversation after some "time"
         continue_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": conversation_id,
                 "message": "Natural remedies have been used for thousands of years"
@@ -257,7 +257,7 @@ class TestDebateFlow:
         """Test error handling during debate conversations."""
         # Test with invalid conversation ID
         invalid_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": "invalid-uuid-format",
                 "message": "Some message"
@@ -272,7 +272,7 @@ class TestDebateFlow:
         nonexistent_id = str(uuid.uuid4())
         
         nonexistent_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": nonexistent_id,
                 "message": "Some message"
@@ -286,7 +286,7 @@ class TestDebateFlow:
         """Test that bot maintains consistent stance throughout conversation."""
         # Start conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "Electric cars are the future of transportation"
@@ -307,7 +307,7 @@ class TestDebateFlow:
         
         for message in challenging_messages:
             continue_response = self.client.post(
-                "/api/v1/conversation",
+                "/conversation",
                 json={
                     "conversation_id": conversation_id,
                     "message": message
@@ -332,7 +332,7 @@ class TestDebateFlow:
     def test_topic_relevance_indicators(self, user_input, expected_elements):
         """Test that bot responses show some relevance to user input topics."""
         response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": user_input

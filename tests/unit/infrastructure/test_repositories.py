@@ -88,18 +88,20 @@ class TestConversationMemoryRepository:
         deleted_again = await repository.delete(sample_conversation.conversation_id)
         assert deleted_again is False
     
-    def test_conversation_count(self, repository):
+    @pytest.mark.asyncio
+    async def test_conversation_count(self, repository):
         """Test getting conversation count."""
-        assert repository.get_conversation_count() == 0
+        assert await repository.get_conversation_count() == 0
         
         # This is a sync test, so we'll test the internal state directly
         topic = DebateTopic.create("Test", "Test", DebateStance.FOR, ["Arg"])
         conv = Conversation.create(topic)
         repository._conversations[conv.conversation_id] = conv
         
-        assert repository.get_conversation_count() == 1
+        assert await repository.get_conversation_count() == 1
     
-    def test_clear_all(self, repository):
+    @pytest.mark.asyncio
+    async def test_clear_all(self, repository):
         """Test clearing all conversations."""
         # Add some conversations directly to internal storage for testing
         topic = DebateTopic.create("Test", "Test", DebateStance.FOR, ["Arg"])
@@ -109,7 +111,7 @@ class TestConversationMemoryRepository:
         repository._conversations[conv1.conversation_id] = conv1
         repository._conversations[conv2.conversation_id] = conv2
         
-        assert repository.get_conversation_count() == 2
+        assert await repository.get_conversation_count() == 2
         
-        repository.clear_all()
-        assert repository.get_conversation_count() == 0
+        await repository.clear_all()
+        assert await repository.get_conversation_count() == 0
