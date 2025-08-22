@@ -17,6 +17,17 @@ services:
       retries: 3
       start_period: 40s
 
+  # Interactive chat CLI service
+  chat:
+    build: .
+    command: python chat.py
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./.env:/app/.env:ro
+    profiles:
+      - chat
+
   # Simple health check service to ensure dependencies are ready
   healthcheck:
     image: busybox:latest

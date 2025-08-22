@@ -46,17 +46,23 @@ class StartConversationUseCase:
         # Generate debate topic based on user's message
         debate_topic = await self._topic_service.generate_topic_for_message(initial_message)
         
-        # Set the debate topic for this conversation
-        conversation.set_debate_topic(debate_topic)
-        
-        # Create bot response introducing the debate topic
-        stance_description = debate_topic.get_stance_description()
-        bot_response_content = (
-            f"{debate_topic.title}. "
-            f"{stance_description}. "
-            f"Here's why I believe this: {debate_topic.key_arguments[0]}. "
-            f"What do you think about that?"
-        )
+        if debate_topic is None:
+            # User sent a casual greeting - respond with debate-seeking message
+            bot_response_content = (
+                "I hear what you're saying, but I was really looking forward to a good debate "
+                "with you. What's a topic you have strong opinions about?"
+            )
+        else:
+            # Set the debate topic for this conversation
+            conversation.set_debate_topic(debate_topic)
+            
+            # Create bot response introducing the debate topic
+            stance_word = "support" if debate_topic.bot_stance.value == "for" else "oppose"
+            bot_response_content = (
+                f"I actually {stance_word} the idea that {debate_topic.title.lower()}. "
+                f"Here's why I believe this: {debate_topic.key_arguments[0]}. "
+                f"What do you think about that?"
+            )
         
         bot_response = Message.create(
             content=bot_response_content,
