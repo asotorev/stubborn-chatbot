@@ -11,7 +11,7 @@ from src.core.use_cases.start_conversation import StartConversationUseCase
 from src.core.use_cases.continue_conversation import ContinueConversationUseCase
 
 
-router = APIRouter(prefix="/api/v1", tags=["Conversation"])
+router = APIRouter(tags=["Conversation"])
 
 
 @router.post(

@@ -24,7 +24,7 @@ class TestConversationAPI:
     def test_start_conversation_success(self):
         """Test starting a new conversation via API."""
         response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "I think climate change is real"
@@ -53,7 +53,7 @@ class TestConversationAPI:
         """Test continuing an existing conversation via API."""
         # First, start a conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": "Initial message"
@@ -65,7 +65,7 @@ class TestConversationAPI:
         
         # Then continue it
         continue_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": conversation_id,
                 "message": "Follow-up message"
@@ -89,7 +89,7 @@ class TestConversationAPI:
     def test_start_conversation_empty_message(self):
         """Test starting conversation with empty message fails."""
         response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": None,
                 "message": ""
@@ -103,7 +103,7 @@ class TestConversationAPI:
     def test_continue_conversation_not_found(self):
         """Test continuing non-existent conversation fails."""
         response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "conversation_id": "non-existent-id",
                 "message": "Some message"
@@ -117,7 +117,7 @@ class TestConversationAPI:
     def test_invalid_request_format(self):
         """Test invalid request format returns 422."""
         response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={
                 "invalid_field": "value"
             }
@@ -129,7 +129,7 @@ class TestConversationAPI:
         """Test that API returns maximum 5 recent messages."""
         # Start conversation
         start_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={"conversation_id": None, "message": "Message 1"}
         )
         conversation_id = start_response.json()["conversation_id"]
@@ -137,13 +137,13 @@ class TestConversationAPI:
         # Add multiple messages to exceed 5 total
         for i in range(2, 6):  # Messages 2, 3, 4, 5
             self.client.post(
-                "/api/v1/conversation",
+                "/conversation",
                 json={"conversation_id": conversation_id, "message": f"Message {i}"}
             )
         
         # Get final response
         final_response = self.client.post(
-            "/api/v1/conversation",
+            "/conversation",
             json={"conversation_id": conversation_id, "message": "Final message"}
         )
         
