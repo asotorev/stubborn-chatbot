@@ -20,7 +20,8 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from src.adapters.dependency_injection.container import (
     get_start_conversation_use_case,
-    get_continue_conversation_use_case
+    get_continue_conversation_use_case,
+    cleanup_redis_connections
 )
 
 
@@ -174,6 +175,9 @@ async def main():
     except Exception as e:
         print(f"\nUnexpected error: {e}")
         sys.exit(1)
+    finally:
+        # Clean up Redis connections on exit
+        await cleanup_redis_connections()
 
 
 if __name__ == "__main__":

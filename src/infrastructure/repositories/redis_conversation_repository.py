@@ -16,7 +16,7 @@ from redis.exceptions import RedisError, ConnectionError as RedisConnectionError
 
 from ...core.entities.conversation import Conversation
 from ...core.entities.message import Message
-from ...core.entities.debate_topic import DebateTopic, StanceType
+from ...core.entities.debate_topic import DebateTopic, DebateStance
 from ...core.interfaces.conversation_repository import ConversationRepositoryInterface, RepositoryError
 
 logger = logging.getLogger(__name__)
@@ -254,7 +254,7 @@ class RedisConversationRepository(ConversationRepositoryInterface):
             message_data = {
                 "role": message.role,
                 "content": message.content,
-                "timestamp": message.timestamp.isoformat()
+                "timestamp": message.created_at.isoformat()
             }
             messages_data.append(message_data)
         
@@ -265,6 +265,7 @@ class RedisConversationRepository(ConversationRepositoryInterface):
                 "title": conversation.topic.title,
                 "description": conversation.topic.description,
                 "bot_stance": conversation.topic.bot_stance.value,
+                "key_arguments": conversation.topic.key_arguments,
                 "created_at": conversation.topic.created_at.isoformat()
             }
         
@@ -303,7 +304,8 @@ class RedisConversationRepository(ConversationRepositoryInterface):
                 topic = DebateTopic(
                     title=topic_data["title"],
                     description=topic_data["description"],
-                    bot_stance=StanceType(topic_data["bot_stance"]),
+                    bot_stance=DebateStance(topic_data["bot_stance"]),
+                    key_arguments=topic_data.get("key_arguments", ["Argument pending"]),
                     created_at=datetime.fromisoformat(topic_data["created_at"])
                 )
             
@@ -311,9 +313,9 @@ class RedisConversationRepository(ConversationRepositoryInterface):
             messages = []
             for message_data in data.get("messages", []):
                 message = Message(
-                    role=message_data["role"],
                     content=message_data["content"],
-                    timestamp=datetime.fromisoformat(message_data["timestamp"])
+                    role=message_data["role"],
+                    created_at=datetime.fromisoformat(message_data["timestamp"])
                 )
                 messages.append(message)
             
