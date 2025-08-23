@@ -1,38 +1,64 @@
-"""
-Main entry point for the Stubborn Chatbot API.
+"""FastAPI application entry point."""
 
-This module initializes the FastAPI application.
-"""
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from src.adapters.api.routes import conversation, health
+from src.adapters.api.schemas.responses import ErrorResponse
+from src.adapters.dependency_injection.container import cleanup_redis_connections
 
-from fastapi import FastAPI
+logger = logging.getLogger(__name__)
 
 
-def create_app() -> FastAPI:
-    """
-    Create and configure the FastAPI application.
-    
-    Returns:
-        FastAPI: Configured FastAPI application instance
-    """
-    app = FastAPI(
-        title="Stubborn Chatbot API",
-        description="A persuasive chatbot that debates and stands its ground",
-        version="1.0.0"
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan management."""
+    # Startup
+    logger.info("Starting Debate Chatbot API...")
+    yield
+    # Shutdown
+    logger.info("Shutting down Debate Chatbot API...")
+    await cleanup_redis_connections()
+
+
+# Create FastAPI app
+app = FastAPI(
+    title="Debate Chatbot API",
+    description="A chatbot that holds debates and attempts to convince users of its views",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(health.router)
+app.include_router(conversation.router)
+
+
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Global exception handler."""
+    return JSONResponse(
+        status_code=500,
+        content=ErrorResponse(
+            error="Internal Server Error",
+            detail=str(exc)
+        ).model_dump()
     )
-    
-    # TODO: Add routers and middleware in future commits
-    
-    return app
-
-
-# Application instance
-app = create_app()
-
-
-@app.get("/health")
-async def health_check():
-    """Basic health check endpoint."""
-    return {"status": "healthy", "message": "Stubborn Chatbot API is running"}
 
 
 if __name__ == "__main__":
