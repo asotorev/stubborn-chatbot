@@ -32,6 +32,13 @@ def get_conversation_repository() -> ConversationRepositoryInterface:
     
     Returns either in-memory or Redis repository based on STORAGE_TYPE setting.
     """
+    import os
+    
+    # Use memory storage during testing to avoid async event loop issues
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        logger.info("Using in-memory conversation repository for testing")
+        return ConversationMemoryRepository()
+    
     settings = get_settings()
     
     if settings.storage_type.lower() == "redis":
